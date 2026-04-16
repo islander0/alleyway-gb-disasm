@@ -3,16 +3,15 @@
 Annotated decompilation of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
 ## Tools
-- [Ghidra 11.4.2](https://github.com/NationalSecurityAgency/ghidra/
-releases/tag/Ghidra_11.4.2_build) with the [GhidraBoy]
-(https://github.com/Gekkio/GhidraBoy) extension
+- **Ghidra 11.4.2:** (https://github.com/NationalSecurityAgency/ghidra/
+releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
+(https://github.com/Gekkio/GhidraBoy) extension.
 
 ## Files
 - This decompilation targets the single known ROM revision (World, CRC32:
 5CC01586, SHA-1: 0CF2B8D0428F389F5361F67A0CD1ACE05A1C75CC), which was released
 identically across all regions. The ROM is *not* included in this repo for legal
-reasons, you will need to provide
-your own.
+reasons, you will need to provide your own.
 - `alleyway_gb.c` — Full decompiled output with renamed functions, 
   variables, and inline comments
 
