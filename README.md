@@ -1,4 +1,4 @@
-# Alleyway (Game Boy) — Decompilation
+# Alleyway (Game Boy) — Disassembly
 
 Annotated decompilation of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
