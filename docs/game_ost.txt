@@ -1,0 +1,13 @@
+00 = n/a
+01 = Title
+02 = Start
+03 = Game Over
+04 = Pause
+05 = Stage Complete
+06 = Bonus Stage
+07 = Bonus Stage Fast
+08 = Bonus Stage Start
+09 = Bonus Stage Lose
+0A = Bonus Stage Win
+0B = Brick Scroll Down SFX
+0C = Nice Play!
