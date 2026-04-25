@@ -9,16 +9,17 @@ releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
 - **RGBDS:** (https://github.com/gbdev/rgbds)
 
 ## How to Assemble and Link
-Download RGBDS and run these commands on root:
+Download RGBDS and run these commands on root (replace [PATH]
+with desired directory):
 
 ### 1. Build the object file
-rgbasm -i src -o build/build.o src/main.asm
+rgbasm -i src -o [PATH]/alleyway.o src/main.asm
 
 ### 2. Link the ROM
-rgblink -o build/build.gb build/build.o -t -d
+rgblink -o [PATH]/alleyway.gb [PATH]/alleyway.o -t -d
 
 ### 3. fix the Checksum
-rgbfix -v build/build.gb
+rgbfix -v [PATH]/alleyway.gb
 
 ## Files
 - This disassembly targets the single known ROM revision (World, CRC32:
