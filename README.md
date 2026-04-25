@@ -1,11 +1,24 @@
 # Alleyway (Game Boy) — Disassembly
 
-Annotated decompilation of **Alleyway** (Nintendo, 1989) for the Game Boy.
+Annotated disassembly of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
 ## Tools
 - **Ghidra 11.4.2:** (https://github.com/NationalSecurityAgency/ghidra/
 releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
 (https://github.com/Gekkio/GhidraBoy) extension.
+- **RGBDS:** (https://github.com/gbdev/rgbds)
+
+## How to Assemble and Link
+Download RGBDS and run these commands on root:
+
+### 1. Build the object file
+rgbasm -i src -o build/build.o src/main.asm
+
+### 2. Link the ROM
+rgblink -o build/build.gb build/build.o -t -d
+
+### 3. fix the Checksum
+rgbfix -v build/build.gb
 
 ## Files
 - This decompilation targets the single known ROM revision (World, CRC32:
@@ -16,12 +29,14 @@ reasons, you will need to provide your own.
   variables, and inline comments
 
 ## Coverage
-197 functions identified and named, including 12 that are either
+~200 functions identified and named, including 12 that are either
 unreachable, debug or unused.
+Some data remains unnamed, and there is much work to do in the labelling/
+commenting part of the job.
 
 ## Notable Findings
 
-**Unused tilemap blitter (`unused_tilemap_blit`, 0x0302)**  
+**Unused tilemap blitter (`unused_tilemap_blit`)**
 A general-purpose rectangular tile stamp routine that reads inline 
 parameters from the call site. Never called in the final game:
 likely a scrapped screen layout system that was replaced by the 
@@ -45,5 +60,5 @@ causing it to clip inside the wall. Resolves on next movement input.
 This bug is fixed in the [Alleyway DX](https://www.romhacking.net/hacks/6510/) ROM hack.
 
 ## License
-This project contains no Nintendo IP. The `.c` file is a 
-decompiler output and represents original research and annotation work.
+This project contains no Nintendo IP. The .asm files present here are 
+original research and annotation work.
