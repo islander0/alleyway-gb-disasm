@@ -21,12 +21,10 @@ rgblink -o build/build.gb build/build.o -t -d
 rgbfix -v build/build.gb
 
 ## Files
-- This decompilation targets the single known ROM revision (World, CRC32:
+- This disassembly targets the single known ROM revision (World, CRC32:
 5CC01586, SHA-1: 0CF2B8D0428F389F5361F67A0CD1ACE05A1C75CC), which was released
 identically across all regions. The ROM is *not* included in this repo for legal
-reasons, you will need to provide your own.
-- `alleyway_gb.c` — Full decompiled output with renamed functions, 
-  variables, and inline comments
+reasons.
 
 ## Coverage
 ~200 functions identified and named, including 12 that are either
