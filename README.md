@@ -3,8 +3,7 @@
 Annotated disassembly of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
 ## Tools
-- **Ghidra 11.4.2:** (https://github.com/NationalSecurityAgency/ghidra/
-releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
+- **Ghidra 11.4.2:** (https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
 (https://github.com/Gekkio/GhidraBoy) extension.
 - **RGBDS:** (https://github.com/gbdev/rgbds)
 
