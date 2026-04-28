@@ -1,28 +1,27 @@
-# Alleyway (Game Boy) — Disassembly
+# Alleyway (Game Boy) Disassembly
 
 Annotated disassembly of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
 ## Tools
-- **Ghidra 11.4.2:** (https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4.2_build) with the **GhidraBoy**
-(https://github.com/Gekkio/GhidraBoy) extension.
-- **RGBDS:** (https://github.com/gbdev/rgbds)
+- **[Ghidra 11.4.2](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4.2_build)** with the **[GhidraBoy](https://github.com/Gekkio/GhidraBoy)** extension.
+- **[RGBDS](https://github.com/gbdev/rgbds)**
 
 ## How to Assemble and Link
 Download RGBDS and run these commands on root (replace [PATH]
 with desired directory):
 
 ### 1. Build the object file
-rgbasm -i src -o [PATH]/alleyway.o src/main.asm
+`rgbasm -i src -o [PATH]/alleyway.o src/main.asm`
 
 ### 2. Link the ROM
-rgblink -o [PATH]/alleyway.gb [PATH]/alleyway.o -t -d
+`rgblink -o [PATH]/alleyway.gb [PATH]/alleyway.o -t -d`
 
-### 3. fix the Checksum
-rgbfix -v [PATH]/alleyway.gb
+### 3. Fix the Checksum
+`rgbfix -v [PATH]/alleyway.gb`
 
 ## Files
-- This disassembly targets the single known ROM revision (World, CRC32:
-5CC01586, SHA-1: 0CF2B8D0428F389F5361F67A0CD1ACE05A1C75CC), which was released
+- This disassembly targets the single known ROM revision
+(World, CRC32: 5CC01586, SHA-1: 0CF2B8D0428F389F5361F67A0CD1ACE05A1C75CC), which was released
 identically across all regions. The ROM is *not* included in this repo for legal
 reasons.
 
