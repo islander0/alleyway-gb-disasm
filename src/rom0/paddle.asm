@@ -24,13 +24,18 @@ paddle_movement_handler:
     ldh a, [h_serial_sample_curr]           
     cp $F1
     jr c, .update_serial_sample
+
+    ; b = paddle_speed
+
     ld b, $5    ; A pressed: fast
     ldh a, [h_button_pressed_neg]           
     rrca
     jr nc, .check_l_and_r
+
     ld b, $1    ; B pressed: slow
     rrca
     jr nc, .check_l_and_r
+
     ld b, $3    ; N/A: normal
 
 .check_l_and_r
@@ -38,6 +43,7 @@ paddle_movement_handler:
     xor $FF
     and $30 ; if L+R, LAB_0df3 -> don't move
     ret z
+
     and $20
     jr z, .move_paddle_right
 
@@ -65,7 +71,8 @@ paddle_movement_handler:
     ldh [h_paddle_x], a  
     ret
 
-; NOT EMULATED
+; not emulated
+
 .update_serial_sample 
     ldh a, [h_paddle_collision_width]      
     ld b, a
@@ -83,6 +90,7 @@ paddle_movement_handler:
 clamp_paddle_x:
     cp $F   ; A = paddle_x
     jr nc, LAB_10f4
+
 ; IF PADDLE_X < $F
 
 LAB_10f0:
@@ -187,7 +195,7 @@ update_paddle_hit_counter:
     ldh a, [h_paddle_hit_counter]           
     dec a
     ldh [h_paddle_hit_counter], a
-    jr nz, LAB_118c
+    jr nz, paddle_hit_counter_set
     call lcd_y_handler
 
 SECTION "Update Paddle OAM", ROM0[$118F]

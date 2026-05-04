@@ -1,42 +1,52 @@
+DEF PALETTE_FADE_IN_DATA_START  EQU $08C2
+DEF PALETTE_FADE_OUT_DATA_START EQU $08C6
+
+DEF SCROLL_X_TABLE_START        EQU $CA00
+
 SECTION "LCD Switch", ROM0[$0244]
 
 lcd_ppu_enable:
-    ldh a, [h_lcdc_mirror] 
+    ldh a, [h_lcdc_mirror]
     and $7F
     or $80
-    ldh [h_lcdc_mirror], a 
-    ldh [rLCDC], a 
+    ldh [h_lcdc_mirror], a
+    ldh [rLCDC], a
+
     ret
 
 lcd_disable_and_wait_vblank:
-    ldh a, [h_lcdc_mirror] 
+    ldh a, [h_lcdc_mirror]
     and $7F
-    ldh [h_lcdc_mirror], a 
+    ldh [h_lcdc_mirror], a
+
     jr wait_vblank
 
 SECTION "Palette", ROM0[$08A7]
 
 load_fade_in_data:
-    ld hl, $8C2
+    ld hl, PALETTE_FADE_IN_DATA_START
     jr set_counter
 
 game_win_fade_handler:
-    ld hl, $8C6 ; load_fade_out_data
+    ld hl, PALETTE_FADE_OUT_DATA_START
 
 set_counter:
     ld b, $4
 
 .Lab_08b1
-    ld a, [hl+] ; =>palette_fade_out_data
+    ld a, [hl+]
     call set_palette_data
+
     push bc
     push hl
     ld a, $10
-    call wait_frames    ; wait 10 frames
+    call wait_frames
     pop hl
     pop bc
+
     dec b
     jr nz, .Lab_08b1
+
     ret
 
 SECTION "Set Palette Data", ROM0[$08CA]
@@ -61,13 +71,14 @@ lcd_stat_work:
     sla a
     ld b, $7
     add b
-
     ldh [rLYC], a
+
     ld b, $0
-    ld hl, $CA00
+    ld hl, SCROLL_X_TABLE_START
     add hl, bc
     ld a, [hl]  ; =>[w_scroll_x_table]
     ldh [rSCX], a
+
     xor a
     cp c
     ret nz
@@ -101,11 +112,14 @@ update_lcd_y:
     sla a
     sla a   ; brick_fall_counter * 4
     add $0  ; useless, maybe old code remnant
-    ld [w_lcd_y], a    
+    ld [w_lcd_y], a
+    
     ld b, $70
+
     ldh a, [h_lcd_y_descent_counter]        
     cp $15
     jr c, .update_lcd_y_vblank   ; normally never happens during normal gameplay
+
     ld b, $B0
 
 .update_lcd_y_vblank
@@ -117,23 +131,32 @@ lcd_y_handler:
     ldh a, [h_lcd_y_descent_counter]        
     cp $0
     ret z
+
     dec a
     ldh [h_lcd_y_descent_counter], a
+
     call load_track_brick_scrolldown    ; play brick scrolldown sfx
     call update_lcd_y
     call load_next_brick_line_obj
+
     ldh a, [h_lcd_y_descent_counter]        
     cp $0
+    ret z   ; == 0
+
+    dec a   ; - 1 == 0
     ret z
-    dec a
-    ret z
+
     ld b, a
     and $1
     ret z
+
     ld a, b
     ldh [h_play_area_scroll_y], a
+
     call brick_collision_handler
+
     ldh a, [h_play_area_scroll_y]           
     add $16
     ldh [h_play_area_scroll_y], a
+
     jp brick_collision_handler

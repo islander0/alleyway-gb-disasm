@@ -1,3 +1,5 @@
+DEF EXTRA_LIFE_THRESHOLD_TABLE_START    EQU $1B5D
+
 SECTION "Increment Stage Number Display", ROM0[$0744]
 
 ; triggers upon losing in a bonus level       
@@ -17,22 +19,25 @@ add_brick_score_to_player_score:
     ld b, a
     ld e, $6
     call multiply   ; bc = A x 6
-    ld hl, $1B87
+
+    ld hl, BRICK_DATA_TABLE_START
     add hl, bc      ; hl +0, +$6, +$C or +$12
     ld b, $0
     ld c, $3
     add hl, bc
     ld a, [hl]  ; [hl]  ; =>brick_data_table[0][3]): hl +$3, +$9, +$F or +$15
+
     swap a
     and $F
     ld b, a
-    ldh a, [h_player_score_lo]              
+    ldh a, [h_player_score_loz]              
     add b
     ldh [h_player_score_lo], a   
     ldh a, [h_player_score_hi]              
     adc $0
     ldh [h_player_score_hi], a   
     ret nc
+    
     xor a   ; cancel score addition: score cap
     dec a
     ldh [h_player_score_hi], a  ; = $FF
@@ -44,8 +49,8 @@ add_brick_score_to_player_score:
 ; update in sync with the player score
 
 update_score_all:
-    ld bc, $FFCC
-    ld hl, $FFCA
+    ld bc, h_top_score_lo
+    ld hl, h_player_score_lo
     ldh a, [c]  ; =>h_top_score_lo   
     sub [hl]    ; =>h_player_score_lo
     push af
@@ -65,7 +70,7 @@ update_score_all:
     ret
 
 extra_life_score_handler:
-    ld hl, $FFCA
+    ld hl, h_player_score_lo
     ldh a, [h_extra_life_score_threshold_lo]
     sub [hl]    ; [hl]  ; =>h_player_score_lo
     push af
@@ -74,11 +79,15 @@ extra_life_score_handler:
     ldh a, [h_extra_life_score_threshold_hi]
     sbc [hl]    ; [hl]  ; =>h_player_score_hi
     ret nc
-; IF SCORE >= MULTIPLE OF 1000
+
+    ; if score >= multiple of 1000
+
     ld a, [w_life_counter]   ; =>[w_life_counter]        
     cp $9
     jr nc, .Lab_0c8c
-; IF life < 10
+
+    ; if life < 10
+
     inc a
     ld [w_life_counter], a      
     call set_event_extra_life
@@ -91,15 +100,19 @@ set_next_extra_life_score_threshold:
     sla a
     ld c, a
     ld b, $0
-    ld hl, $1b5d
+    ld hl, EXTRA_LIFE_THRESHOLD_TABLE_START
     add hl, bc
+
     ld a, [hl+] ; =>extra_life_threshold_table
-    ldh [h_extra_life_score_threshold_hi], a               
+    ldh [h_extra_life_score_threshold_hi], a    
+
     ld a, [hl]  ; =>extra_life_threshold_table[1]
-    ldh [h_extra_life_score_threshold_lo], a               
+    ldh [h_extra_life_score_threshold_lo], a     
+
     ldh a, [h_extra_life_gained_total]      
     inc a
-    ldh [h_extra_life_gained_total], a                     
+    ldh [h_extra_life_gained_total], a    
+                     
     ret
 
 SECTION "Extra Life Threshold Table", ROM0[$1B5D]

@@ -86,7 +86,7 @@ h_joypad_pressed::              ds 1    ; edge detect, buttons pressed this fram
 h_lcdc_negative::               ds 1    ; convenience copy, non-inverted (1 = pressed)
 h_debug_scroll_x_init::         ds 1    ; debug value to signal that the init scroll x table has correctly reached its last instruction
 h_vblank_flag::                 ds 1
-h_debug_frame_accumulator::     ds 1    ; Increments by $41 per frame, self-contained. Frozen value causes no visible effect, possible debug remnant. See also: music_triggered_flag, ch2_panning_triggered_flag.
+h_frame_accumulator::           ds 1    ; Increments by $41 per frame.
 h_game_tick::                   ds 1    ; Increments by 1 every frame. In the title screen, the timer overflows 3 times and then transitions to the demo.
 h_object_dirty_flag::           ds 1    ; Set to 1 for one frame when any object is loaded/unloaded. Triggers sprite/object system refresh.
 h_game_state::                  ds 1

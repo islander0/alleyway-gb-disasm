@@ -1,6 +1,6 @@
 SECTION "WRAM0 Region", WRAM0[$C000]
 
-wram_c000:: ds 1024
+brick_type_buffer:: ds 1024
 
 ; these values are bools offset by +$400
 ; $01 = brick not hit

@@ -2,70 +2,81 @@ SECTION "Joypad Read", ROM0[$03C1]
 
 joypad_read:
     ld a, $20
-    ldh [rP1], a  
-    ldh a, [rP1]             
-    ldh a, [rP1]
-    ldh a, [rP1]             
-    ldh a, [rP1]             
+    ldh [rP1], a
 
-.Lab_03cd
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    and $F
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]    ; 10 reads
+
+    and $0F
     swap a
     ld b, a
+
     ld a, $10
-    ldh [rP1], a  
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    and $F
+    ldh [rP1], a
+
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]    ; 10 reads
+
+    and $0F
     or b
+
     ldh [h_button_pressed_neg], a
+
     ld a, $30
-    ldh [rP1], a  
+    ldh [rP1], a
     ld b, $8
-    ldh a, [h_button_pressed]               
+
+    ldh a, [h_button_pressed] 
     ld c, a
+
     ldh a, [h_button_pressed_neg]           
 
 .Lab_0406
     rrc c
     jr c, .Lab_0416
+
     rrca
     jr nc, .Lab_0421
 
 .Lab_040d               
     dec b
     jr nz, .Lab_0406
-    ldh [h_button_pressed_flag], a  
+
+    ldh [h_button_pressed_flag], a
     ld a, c
-    ldh [h_button_pressed], a    
+    ldh [h_button_pressed], a  
+
     ret
 
 .Lab_0416
     rrca
     jr c, .Lab_041d
-    set $7, a
+
+    set $07, a
     jr .Lab_040d
 
 .Lab_041d
-    res $7,c
+    res $07, c
     jr .Lab_040d
 
 .Lab_0421
-    set $7,C
+    set $07, c
     jp .Lab_040d
 
 SECTION "Math", ROM0[$0454]
@@ -73,14 +84,15 @@ SECTION "Math", ROM0[$0454]
 multiply:   ; BC = B * E
     push af
     push hl
+
     ld hl, $0
     ld c, $0
     srl b
-    rr c
+    rr c    ; sets c flag to 0
     ld a, $8
 
 .Lab_0461
-    sla E
+    sla e
     jr nc, .Lab_0466
     add hl, bc
 
@@ -89,10 +101,13 @@ multiply:   ; BC = B * E
     rr c
     dec a
     jr nz, .Lab_0461
+
     ld c, l
     ld b, h
+
     pop hl
     pop af
+
     ret
 
 ; general use math that never gets used in the game
@@ -127,49 +142,55 @@ binary_to_bcd:
 ; $FF96-$FF9A      
 
 score_to_bcd:
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
     ld a, b
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     ld b, $FF
 
 .set_score_digit_thousands
     inc b
+
     ldh a, [h_score_digit_ones]             
     sub $10
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
+
     ldh a, [h_score_digit_tens]             
     sbc $27
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
+
     jr nc, .set_score_digit_thousands
 
 .carry_tens_of_thousands_flag
     ldh a, [h_score_digit_ones]             
     add $10
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
+
     ldh a, [h_score_digit_tens]             
     adc $27
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
+
     ld a, b
-    ldh [h_score_digit_tens_of_thousands], a               
+    ldh [h_score_digit_tens_of_thousands], a    
+
     ld b, $FF
 
 .set_score_digit_hundreds
     inc b
     ldh a, [h_score_digit_ones]             
     sub $E8
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     ldh a, [h_score_digit_tens]             
     sbc $3
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
     jr nc, .set_score_digit_hundreds
 
 .carry_thousands_flag
     ldh a, [h_score_digit_ones]             
     add $E8
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     ldh a, [h_score_digit_tens]             
     adc $3
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
     ld a, b
     ldh [h_score_digit_thousands], a
     ld b, $FF
@@ -178,16 +199,16 @@ score_to_bcd:
     inc b
     ldh a, [h_score_digit_ones]             
     sub $64
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     ldh a, [h_score_digit_tens]             
     sbc $0
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
     jr nc, .set_score_digit_tens
 
 .carry_hundreds_flag
     ldh a, [h_score_digit_ones]             
     add $64
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     ld a, b
     ldh [h_score_digit_hundreds], a 
     ld b, $FF
@@ -196,16 +217,16 @@ score_to_bcd:
     inc b
     ldh a, [h_score_digit_ones]             
     sub $A
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
     jr nc, .set_score_digit_ones
 
 .carry_tens_flag
     ldh a, [h_score_digit_ones]             
     add $A
-    ldh [h_score_digit_ones], a  
-    ldh [h_score_digit_ones], a  
+    ldh [h_score_digit_ones], a
+    ldh [h_score_digit_ones], a
     ld a, b
-    ldh [h_score_digit_tens], a  
+    ldh [h_score_digit_tens], a
     ret
 
 SECTION "Clear Objects in WRAM0", ROM0[$0983]
@@ -220,7 +241,7 @@ clear_objects_wram0:
 .Lab_098c
     ld a, $0
     ld [hl+], a ; [hl]  ; =>BYTE_C000
-    ld [de], a  ; (de)=>w_object_state_array
+    ld [de], a; (de)=>w_object_state_array
     inc de
     dec bc
     ld a, b
@@ -234,9 +255,11 @@ negate_bc:
     ld a, b
     xor $FF
     ld b, a
+
     ld a, c
     xor $FF
     ld c, a
+
     inc bc
     ret
 
@@ -258,37 +281,37 @@ unused_joypad_update:
     push af
     push bc
     ld a, $10
-    ldh [rP1], a  
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
+    ldh [rP1], a
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
     cpl
     and $F
     ld b, a
     ld a, $20
-    ldh [rP1], a  
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
-    ldh a, [rP1]             
+    ldh [rP1], a
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
+    ldh a, [rP1]
     cpl
     and $F
     swap a
     or b
     ld c, a
-    ldh a, [h_oam_dma_routine]              
+    ldh a, [h_oam_dma_routine]
     xor c
     and c
     ldh [$FF81], a ; [h_unused_joypad_press_latch], a
     ld a, c
-    ldh [h_oam_dma_routine], a   
+    ldh [h_oam_dma_routine], a 
     ld a, $30
-    ldh [rP1], a  
+    ldh [rP1], a
     pop bc
     pop af
 
