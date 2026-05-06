@@ -146,3 +146,26 @@ void negate_bc(CPU *cpu) {
     cpu->bc = (cpu->bc ^ 0xFFFF) + 1;
     return;
 }
+
+uint8_t binary_to_bcd(uint8_t bcd_result) {
+    uint8_t bcd_hundreds = 0xFF;    // cpu->c
+    uint8_t bcd_tens = 0xFF;        // cpu->b
+
+    do {
+        bcd_hundreds++;
+        bcd_result -= 100;
+    } while (bcd_result >= 100);
+
+    bcd_result += 100;
+
+    do {
+        bcd_tens++;
+        bcd_result -= 10;
+    } while (bcd_result >= 10);
+
+    bcd_result += 10;
+
+    return bcd_result;
+    return bcd_hundreds;
+    return bcd_tens;
+}

@@ -12,8 +12,6 @@
 #define MARIO_WINK_ANIM_OFFSET_LEN 29
 #define ANIM_FRAME_TILE_LEN 208
 
-// void clear_anim_oam_buffer(void){}
-
 void animate_bricks_scroll_in() {
     hram.play_area_scroll_y = hram.total_row_count - 2;
 

@@ -1,18 +1,22 @@
 #pragma once
 #include <stdint.h>
 
-#define OAM_PADDLE_START (wram.oam_buffer + 0x00)
-#define OAM_GAME_OVER_START (wram.oam_buffer + 0x00)
-#define OAM_BALL_START (wram.oam_buffer + 0x0C)
-#define OAM_DEBUG_BALL_VELOCITY_START (wram.oam_buffer + 0x10)
-#define OAM_TITLE_SCORE_START (wram.oam_buffer + 0x28)
-#define OAM_WALL_START (wram.oam_buffer + 0x3C)
+#define OAM_BUFFER_START 0x00
 
-#define OAM_STAGE_NUMBER_START (wram.oam_buffer + 0x80)
-#define OAM_BONUS_TEXT_START (wram.oam_buffer + 0x80)
-#define OAM_BONUS_STAG_TIME_START (wram.oam_buffer + 0x80)
-#define OAM_PAUSE_START (wram.oam_buffer + 0x80)
-#define OAM_SPECIAL_BONUS_POINTS_START (wram.oam_buffer + 0x80)
+#define OAM_PADDLE_START 0x00
+#define OAM_GAME_OVER_START 0x00
+#define OAM_BALL_START 0x0C
+#define OAM_DEBUG_BALL_VELOCITY_START 0x10
+#define OAM_SCORE_START 0x14
+#define OAM_TITLE_SCORE_START 0x28
+#define OAM_WALL_START 0x3C
+
+#define OAM_STAGE_NUMBER_START 0x80
+#define OAM_BONUS_TEXT_START 0x80
+#define OAM_BONUS_STAGE_TIME_START 0x80
+#define OAM_PAUSE_START 0x80
+#define OAM_SPECIAL_BONUS_POINTS_START 0x88
+#define OAM_MARIO_WALK_START 0x88
 
 #define SCROLL_X_TABLE_LEN 20
 #define LEVEL_SCROLL_X_MAX_TIMER_LEN 20

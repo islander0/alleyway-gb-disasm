@@ -24,11 +24,11 @@ void paddle_movement_handler(CPU *cpu) {
     }
 
     uint8_t paddle_speed = 5;
-    if ();
+    if ()
 
-    uint8_t paddle_speed = 1;
+    paddle_speed = 1;
 
-    uint8_t paddle_speed = 3;
+    paddle_speed = 3;
 
     // check L + R
     hram.button_pressed_neg = 0x30 ^ (hram.button_pressed_neg & 0x30);
