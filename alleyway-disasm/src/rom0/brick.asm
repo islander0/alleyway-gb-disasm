@@ -90,7 +90,7 @@ bricks_slide_in_from_top:
 .Lab_09bf
     call brick_collision_handler
     call wait_vblank
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     cp $0
     ret z
     dec a
@@ -141,12 +141,12 @@ count_level_bricks:
 
 setup_single_brick_oam_entry:
     call check_object_dirty_flag
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     srl a
     ld b, a
     ld e, $20
     call multiply
-    ldh a, [h_brick_probe_x]                
+    ldh a, [h_brick_probe_x]          
     ld l, a
     ld h, $0
     add hl, bc
@@ -154,12 +154,12 @@ setup_single_brick_oam_entry:
     ldh [h_brick_tilemap_offset_hi], a                     
     ld a, l
     ldh [h_brick_tilemap_offset_lo], a                     
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     srl a
     ld b, a
     ld e, $1C
     call multiply
-    ldh a, [h_brick_probe_x]                
+    ldh a, [h_brick_probe_x]          
     ld l, a
     ld h, $0
     add hl, bc
@@ -195,7 +195,7 @@ setup_single_brick_oam_entry:
     jp z, .Lab_0a64
     dec a
     push af
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     dec a
     ld b, a
     ld e, $6
@@ -210,9 +210,9 @@ setup_single_brick_oam_entry:
     ldh [h_brick_type_last_hit], a  
 
 .Lab_0a64   
-    ldh a, [h_brick_tilemap_offset_hi]      
+    ldh a, [h_brick_tilemap_offset_hi]
     ld b, a
-    ldh a, [h_brick_tilemap_offset_lo]      
+    ldh a, [h_brick_tilemap_offset_lo]
     ld c, a
     ld hl, $9821
     add hl, bc
@@ -231,7 +231,7 @@ setup_single_brick_oam_entry:
     ld [hl+], a     ; w_tile_buffer + $01, a    
     ld a, $1
     ld [hl+], a     ; w_tile_buffer + $02, a    
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     ld [hl+], a     ; w_tile_buffer + $03, a    
     pop bc
     ld a, b
@@ -240,7 +240,7 @@ setup_single_brick_oam_entry:
     ld [hl+], a     ; w_tile_buffer + $05, a    
     ld a, $1
     ld [hl+], a     ; w_tile_buffer + $06, a    
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     ld [hl+], a     ; w_tile_buffer + $07, a    
     xor a
     ld [hl+], a     ; w_tile_buffer + $08, a    
@@ -252,12 +252,12 @@ SECTION "Brick Collision", ROM0[$0A96]
 
 brick_collision_handler:
     call check_object_dirty_flag
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     srl a
     ld b, a
     ld e, $20
     call multiply
-    ld hl, $9821
+    ld hl, $9821    ; MAGIC NUMBER
     add hl, bc
     ld b, h
     ld c, l
@@ -268,7 +268,7 @@ brick_collision_handler:
     ld [hl+], a     ; w_tile_buffer + $01, a    
     ld a, $1C
     ld [hl], a      ; w_tile_buffer + $02, a     
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     srl a
     ld b, a
     ld e, $1C
@@ -312,7 +312,7 @@ brick_collision_handler:
     jp z, .Lab_0b07
     dec a
     push af
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     dec a
     ld b, a
     ld e, $6
@@ -328,7 +328,7 @@ brick_collision_handler:
 
 .Lab_0b07
     pop de
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     ld [de], a ; =>BYTE_c904), a     
     ld b, d
     ld c, e
@@ -354,12 +354,13 @@ brick_collision_handler:
 ; executed each frame during gameplay, even when the level doesn't scroll
 
 scroll_x_handler:
-    ldh a, [h_scrolling_x_stage_flag]       
+    ldh a, [h_scrolling_x_stage_flag] 
     cp $0
     ret z
+
     ld hl, W_SCROLL_X_TABLE_START
-    ld de, $CA14
-    ld bc, $CA28
+    ld de, $CA14    ; MAGIC NUMBER
+    ld bc, $CA28    ; MAGIC NUMBER
     ld a, $0
 
 .update_scroll_x_timer
@@ -398,6 +399,7 @@ scroll_x_advance:
     inc a
     cp $70
     jr c, .Lab_0b5b
+
     ld a, $0
 
 .Lab_0b5b
@@ -412,6 +414,7 @@ scroll_x_recede:
     dec a
     cp $FF  ; failsafe
     jr nz, .Lab_0b65
+    
     ld a, $6F
 
 .Lab_0b65
@@ -424,32 +427,36 @@ SECTION "Init Scroll X", ROM0[$0B9D]
 
 init_scroll_x_table:
     ld a, $0
-    ldh [h_lcdc_negative], a     
+    ldh [h_lcdc_negative], a    
+
     ld hl, W_SCROLL_X_TABLE_START
-    ld b, $14   ; counter = 20
+    ld b, 20   ; counter
 
 .copy_next_row_origin
     ld [hl+], a ; => [w_scroll_x_table] set the bg origin
     dec b
     jr nz, .copy_next_row_origin
+
     xor a
     ldh [h_debug_scroll_x_init], a  
 
 SECTION "Load Next Brick Line", ROM0[$0BF2]
 
 load_next_brick_line_obj:
-    ldh a, [h_lcd_y_descent_counter]    ; the counter is decremented before being loaded here
+    ldh a, [h_lcd_y_descent_counter] ; the counter is decremented before being loaded here
     add $14
     ld b, a
-    ld e, $E
+    ld e, 15
     call multiply
+
     ld hl, BRICK_TYPE_BUFFER_START
     add hl, bc
-    ld a, $E    ; = 14 (counter), so 14 bricks in a line
+    ld a, 14    ; = 14 (counter), so 14 bricks in a line
 
 .check_brick_presence
     push af
     push hl
+
     ld a, [hl]  ; hl=>BYTE_C000       
     cp $0
     jr z, .decrement_loop_counter
@@ -457,8 +464,10 @@ load_next_brick_line_obj:
 .update_brick_obj_state
     ld d,h
     ld e,l
+
     ld bc, $400
     add hl, bc
+
     ld a, [hl]  ; [hl]  ; =>w_object_state_array
     cp $0
     ld a, $0
@@ -466,19 +475,22 @@ load_next_brick_line_obj:
     jr z, .decrement_loop_counter
 
 .decrement_brick_count
-    ldh a, [h_active_brick_count_hi]        
+    ldh a, [h_active_brick_count_hi]  
     ld b, a
-    ldh a, [h_active_brick_count_lo]        
+    ldh a, [h_active_brick_count_lo]  
     ld c, a
+
     dec bc
+
     ld a, b
     ldh [h_active_brick_count_hi], a
     ld a, c
     ldh [h_active_brick_count_lo], a
+
     or b
     jr nz, .decrement_loop_counter
 
-.level_clear
+.stage_clear
     ld a, $8
     ldh [h_game_state], a
 
@@ -486,6 +498,7 @@ load_next_brick_line_obj:
     pop hl
     inc hl
     pop af
+
     dec a
     jr nz, .check_brick_presence
     ret
@@ -497,99 +510,136 @@ SECTION "Check Brick Collision", ROM0[$0D37]
 ; current velocity signs. Called before a confirmed collision.
 
 check_brick_collision_both_axes:
-    ldh a, [h_ball_x_velocity_hi]           
+    ldh a, [h_ball_x_velocity_hi]     
     and $80
+
     push af
     call z, check_brick_collision_x_leading_right
     pop af
+
     call nz, check_brick_collision_x_leading_left
-    ldh a, [h_ball_y_velocity_hi]           
+
+    ldh a, [h_ball_y_velocity_hi]     
     and $80
+
     push af
     call z, check_brick_collision_y_leading_down
     pop af
+
     call nz, check_brick_collision_y_leading_up
+
     ret
 
 ; On hit: aligns to tile boundary, negates Y velocity.
 
 check_brick_collision_y_leading_down:
-    ldh a, [h_ball_y]      
+    ldh a, [h_ball_y]
     add $3
     ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x_mirror]         
-    ldh [h_prev_ball_x], a 
+
+    ldh a, [h_ball_x_mirror]
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     jp nz, reverse_ball_y_velocity
-    ldh a, [h_ball_y]      
+
+    ldh a, [h_ball_y]
     ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x_mirror]         
-    ldh [h_prev_ball_x], a 
+
+    ldh a, [h_ball_x_mirror]
+    ldh [h_prev_ball_x], a
     call get_brick_at_pixel_pos
+
     cp $0
     ret z
+
     jp LAB_0ecd    ; to ret instruction
 ; ret whether Z = 0 or not
 
 ; mirror of check_brick_collision_y_leading_down       
 
 check_brick_collision_y_leading_up:
-    ldh a, [h_ball_y]      
+    ldh a, [h_ball_y]
     ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x_mirror]         
-    ldh [h_prev_ball_x], a 
+
+    ldh a, [h_ball_x_mirror]
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     jp nz, reverse_ball_y_velocity
-    ldh a, [h_ball_y]      
+
+    ldh a, [h_ball_y]
     add $3
     ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x_mirror]         
-    ldh [h_prev_ball_x], a 
+
+    ldh a, [h_ball_x_mirror]
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     ret z
+
     jp LAB_0ecd    ; to ret instruction
 
 ; On hit: aligns to tile boundary, negates X velocity.
 
 check_brick_collision_x_leading_right:
-    ldh a, [h_ball_y_mirror]         
-    ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x]      
+    ldh a, [h_ball_y_mirror]
+    ldh [h_prev_ball_y], a
+
+    ldh a, [h_ball_x]
     add $3
-    ldh [h_prev_ball_x], a 
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     jp nz, reverse_ball_x_velocity
-    ldh a, [h_ball_y_mirror]         
-    ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x]      
-    ldh [h_prev_ball_x], a 
+
+    ldh a, [h_ball_y_mirror]
+    ldh [h_prev_ball_y], a
+
+    ldh a, [h_ball_x]
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     ret z
+
     jp align_ball_x_update
 
 ; Mirror of check_brick_collision_x_leading_right         
 
 check_brick_collision_x_leading_left:
-    ldh a, [h_ball_y_mirror]         
-    ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x]      
-    ldh [h_prev_ball_x], a 
+    ldh a, [h_ball_y_mirror]
+    ldh [h_prev_ball_y], a
+
+    ldh a, [h_ball_x]
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     jp nz, reverse_ball_x_velocity
-    ldh a, [h_ball_y_mirror]         
-    ldh [h_prev_ball_y], a 
-    ldh a, [h_ball_x]      
+
+    ldh a, [h_ball_y_mirror]
+    ldh [h_prev_ball_y], a
+
+    ldh a, [h_ball_x]
     add $3
-    ldh [h_prev_ball_x], a 
+    ldh [h_prev_ball_x], a
+
     call get_brick_at_pixel_pos
+
     cp $0
     ret z
+
     jp align_ball_x_update
 
 ; Change the value of the amount of paddle hits necessary
@@ -622,7 +672,7 @@ get_brick_at_pixel_pos:
 
 .LAB_0df6
     ld b, a ; where the ball is vertically
-    ldh a, [h_lcd_y_descent_counter]        
+    ldh a, [h_lcd_y_descent_counter]  
     ld c, a
     ld a, b
     sub c
@@ -638,6 +688,7 @@ get_brick_at_pixel_pos:
     ldh a, [h_prev_ball_x] 
     sub $10     ; 16 px left
     add b       ; if the level doesn't scroll x, then B = 0
+
     cp $70      ; two tiles left from the right wall
     jr c, .LAB_0e12    ; if left of x threshold, jp
 
@@ -646,15 +697,15 @@ get_brick_at_pixel_pos:
 .LAB_0e12
     srl a
     srl a   
-    srl a   ; (prev_ball_x - 10)/8
+    srl a   ; (prev_ball_x - 16) / 8
     ldh [h_brick_probe_x], a     
 
-    ldh a, [h_play_area_scroll_y]           
+    ldh a, [h_play_area_scroll_y]     
     ld b, a
     ld e, $0E
     call multiply
 
-    ldh a, [h_brick_probe_x]                
+    ldh a, [h_brick_probe_x]          
     ld l, a
     ld h, $0
     add hl, bc
@@ -671,8 +722,8 @@ get_brick_at_pixel_pos:
     call brick_type_velocity_handler
     pop hl
 
-    ld d,h
-    ld e,l
+    ld d, h
+    ld e, l
     ld bc, $400
     add hl, bc
     ld a, [hl]  ; =>w_object_state_array
@@ -680,7 +731,7 @@ get_brick_at_pixel_pos:
     jr z, unbreakable_brick_handler ; if you collide with an unbreakable brick
 
     ld b, a
-    ldh a, [h_ball_phase_through]           
+    ldh a, [h_ball_phase_through]     
     cp $0
     jr nz, .bonus_stage_brick_handler
 
@@ -690,7 +741,7 @@ get_brick_at_pixel_pos:
 
 .bonus_stage_brick_handler
     xor a
-    ld [DE], a
+    ld [de], a
 
     ldh a, [h_brick_type_last_hit]
 
@@ -701,9 +752,9 @@ get_brick_at_pixel_pos:
     call brick_type_handler
     call setup_single_brick_oam_entry
 
-    ldh a, [h_active_brick_count_hi]        
+    ldh a, [h_active_brick_count_hi]  
     ld b, a
-    ldh a, [h_active_brick_count_lo]        
+    ldh a, [h_active_brick_count_lo]  
     ld c, a
 
     dec bc
@@ -726,7 +777,7 @@ get_brick_at_pixel_pos:
     jp nz, .LAB_0df3  ; always jump
 
 update_ball_collision_flag:
-    ldh a, [h_ball_collision_flag]          
+    ldh a, [h_ball_collision_flag]    
     inc a
     ldh [h_ball_collision_flag], a  
 
@@ -753,7 +804,7 @@ SECTION "Brick Type Velocity", ROM0[$0F2F]
 ; -------------------------------------------------
 
 brick_type_velocity_handler:
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     dec a
     ld b, a
     ld e, $6
@@ -771,7 +822,7 @@ brick_type_velocity_handler:
     ret z
 
     ld b, a     ; copy new ball velocity
-    ldh a, [h_ball_velocity]                
+    ldh a, [h_ball_velocity]          
     cp b
     ret nc      ; if it's the same velocity
 
@@ -783,7 +834,7 @@ brick_type_velocity_handler:
 ; if the ball hits an unbreakable brick for the 10th time, reset the value
 
 update_unbreakable_brick_collision_counter:
-    ldh a, [h_unbreakable_brick_collision_counter]                    
+    ldh a, [h_unbreakable_brick_collision_counter]           
     inc a
     cp $A
     jr c, .LAB_0f5a
@@ -803,10 +854,10 @@ SECTION "Update Ball OAM Buffer", ROM0[$108D]
 update_ball_oam_buffer:
     ld hl, OAM_BALL_START
 
-    ldh a, [h_ball_y]      
+    ldh a, [h_ball_y]
     ld [hl+], a    ; y
 
-    ldh a, [h_ball_x]      
+    ldh a, [h_ball_x]
     ld [hl+], a    ; x
 
     ld a, $5
@@ -826,7 +877,7 @@ SECTION "Brick Scrolldown Threshold", ROM0[$1177]
 ; After 10 scrolldowns, each paddle hit lowers the bricks
 
 update_brick_scrolldown_threshold:
-    ldh a, [h_lcd_y_offset_counter]         
+    ldh a, [h_lcd_y_offset_counter]
     cp $A
     jr c, .LAB_1181 ; if lcd_offset_counter < 10
 
@@ -1019,7 +1070,7 @@ blank_stage_brick_data: ; if w_true_stage_number = 32, program guard
 SECTION "Brick Type", ROM0[$638D]
 
 brick_type_handler:
-    ldh a, [h_brick_type_last_hit]          
+    ldh a, [h_brick_type_last_hit]    
     dec a
     ld b, a
 

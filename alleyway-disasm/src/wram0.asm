@@ -14,6 +14,9 @@ w_object_state_array:: ds 1024
 SECTION "WRAM OAM Buffer", WRAM0[$C800]
 
 w_oam_buffer::  ds $A0  ; $C800-$C89F
+
+DEF OAM_BUFFER_START    EQU $C800
+
 w_unused_c8a0:: ds $60  ; $C8A0-$C8FF
 
 ; -------------------- Views (overlapping by design) ---------------------
@@ -21,6 +24,7 @@ DEF OAM_PADDLE_START                EQU w_oam_buffer + $00 ; $C800–$C80B
 DEF OAM_GAME_OVER_START             EQU w_oam_buffer + $00 ; $C800–$C81E
 DEF OAM_BALL_START                  EQU w_oam_buffer + $0C ; $C80C–$C80F
 DEF OAM_DEBUG_BALL_VELOCITY_START   EQU w_oam_buffer + $10 ; $C810-$C813
+DEF OAM_SCORE_START                 EQU w_oam_buffer + $14 ; $C814-$C???
 DEF OAM_TITLE_SCORE_START           EQU w_oam_buffer + $28 ; $C828–$C83C
 DEF OAM_WALL_START                  EQU w_oam_buffer + $3C ; $C83C–$C843
 
@@ -29,10 +33,14 @@ DEF OAM_BONUS_TEXT_START            EQU w_oam_buffer + $80 ; $C880–$C887
 DEF OAM_BONUS_STAGE_TIME_START      EQU w_oam_buffer + $80 ; $C880–$C89F
 DEF OAM_PAUSE_START                 EQU w_oam_buffer + $80 ; $C880–$C89F
 DEF OAM_SPECIAL_BONUS_POINTS_START  EQU w_oam_buffer + $88 ; $C888–$C897
+DEF OAM_MARIO_WALK_START            EQU w_oam_buffer + $88 ; $C888–$C897
 
 SECTION "WRAM BG Map Buffer", WRAM0[$C900]
 
 w_bg_map_buffer_pad::       ds 1    ; zeroed for alignment, syncs loop counter with $C90X addresses
+
+DEF TILE_BUFFER_START   EQU $C901
+
 w_tile_buffer::             ds $13  ; $C901–$C913 (12 tile IDs total), $C90B-$C911 unused
 w_unused_c914::             ds $EC  ; $C914-$C9FF
 

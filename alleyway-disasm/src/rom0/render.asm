@@ -1,9 +1,23 @@
+DEF TILE_BLOCK_1_OFFSET EQU $80
+
+DEF SPECIAL_BONUS_TEXT_TILE_DATA_START          EQU $1AAF
+DEF CLEAR_SPECIAL_BONUS_TEXT_TILE_DATA_START    EQU $1ADE
+DEF TRY_AGAIN_TILE_VRAM_DATA_START              EQU $1B0D
+DEF CLEAR_TRY_AGAIN_TILE_VRAM_DATA_START        EQU $1B33
+
+DEF MARIO_START_SPR_PTR_TABLE_START EQU $4A8B
+
+DEF TILE_DATA_BLOCK_0_START EQU $4B75
+DEF TILE_DATA_BLOCK_1_START EQU $5375
+DEF TILE_DATA_BLOCK_2_START EQU $5B75
+
 SECTION "OAM System", ROM0[$023D]
 
 check_object_dirty_flag:
     ldh a, [h_object_dirty_flag]            
     cp $0
     ret z
+
     jr wait_vblank
 
 SECTION "OAM Buffer Updates", ROM0[$02A1]
@@ -12,53 +26,69 @@ oam_buffer_update:
     ldh a, [h_object_dirty_flag]            
     cp $0
     jr z, .cancel_oam_buffer_update
-    ld de, $C901
+
+    ld de, TILE_BUFFER_START
+
     call is_oam_buffer_empty
+
     xor a
-    ld [w_bg_map_buffer_pad], a    
-    ld [w_tile_buffer + $00], a
-    ldh [h_object_dirty_flag], a 
+    ld [w_bg_map_buffer_pad], a
+    ld [w_tile_buffer], a
+    ldh [h_object_dirty_flag], a
 
 .cancel_oam_buffer_update
     ret
 
 copy_oam_buffer_to_hl:
     inc de
+
     ld h, a
     ld a, [de]
     ld l, a
+
     inc de
     ld a, [de]
+
     inc de
+
     call oam_buffer_handler                     
 
 is_oam_buffer_empty:
     ld a, [de]
     cp $0
     jr nz, copy_oam_buffer_to_hl
+
     ret
 
 oam_buffer_handler:
     push af
+
     and $3F
     ld b, a
+
     pop af
+
     rlca
     rlca
     and $3
     jr z, .Lab_02da
+
     dec a
     jr z, .Lab_02e1
+
     dec a
     jr z, .Lab_02e8
+
     jr .Lab_02f5
 
 .Lab_02da
     ld a, [de]
     ld [hl+], a
+
     inc de
     dec b
     jr nz, .Lab_02da
+
     ret
 
 .Lab_02e1
@@ -67,32 +97,40 @@ oam_buffer_handler:
 
 .Lab_02e3
     ld [hl+], a
+
     dec b
     jr nz, .Lab_02e3
+
     ret
 
 .Lab_02e8
     ld a, [de]
     ld [hl], a
+
     inc de
+
     ld a, b
     ld bc, $20
     add hl, bc
+
     ld b, a
     dec b
     jr nz, .Lab_02e8
-    ret
 
+    ret
 
 .Lab_02f5
     ld a, [de]
     ld [hl], a
+
     ld a, b
     ld bc, $20
     add hl, bc
+
     ld b, a
     dec b
     jr nz, .Lab_02f5
+
     inc de
     ret
 
@@ -189,81 +227,96 @@ unused_tilemap_blit:
 
 ; Fill tile_map_0 with $FF tiles
 
-fill_tile_map_0:
-    ld hl, $9800
-    jr Lab_0360
+load_tile_map_0:
+    ld hl, VRAM_TILE_MAP_0_START
+    jr clear_tile_map
 
 ; Fill tile_map_1 with $FF tiles
 
-fill_tile_map_1:
-    ld hl, $9C00
+load_tile_map_1:
+    ld hl, TILE_MAP_1_START
 
-Lab_0360:
+clear_tile_map:
     ld bc, $400
 
 .Lab_0363
     ld a, $FF
     ld [hl+], a ; =>[tile_map_1], a
+
     dec bc
     ld a, b
     or c
     jr nz, .Lab_0363
+
     ret
 
 ; clear most OAMs' buffer on screen during gameplay
 
-clear_main_oam_buffer:
-    ld b, $A0
-    ld a, $0
-    ld hl, $C800    ; [hl] = w_oam_buffer
+load_main_oam_buffer:
+    ld b, 160
+    ld a, 0
+    ld hl, OAM_BUFFER_START
 
-Lab_0373:
-    ld [hl+], a    ; =>[w_oam_buffer], a    
+clear_oam_buffer:
+    ld [hl+], a
     dec b
     jr nz, Lab_0373
+
     ret
 
-SECTION "Tile Loading", ROM0[$0381]
+; clears the OAM buffer of the explosion
+
+load_anim_oam_buffer:
+    ld b, 24
+    ld a, 0
+    ld hl, OAM_SPECIAL_BONUS_POINTS_START
+    jr Lab_0373
 
 ; loads all the visual assets of ROM Bank 01 into the 3 VRAM tile blocks
 
 load_tile_data:
-    ld hl, $5B75
-    ld de, $9000
+    ld hl, TILE_DATA_BLOCK_2_START
+    ld de, VRAM_TILE_BLOCK_2_START
     ld bc, $800
 
 .load_tile_data_block_2
     ld a, [hl+] ; =>[tile_data_block_2]
     ld [de], a ; =>[vram_tile_block_2], a     
     inc de
+
     dec bc
     ld a, b
     or c
     jr nz, .load_tile_data_block_2
-    ld hl, $5375
-    ld de, $8800
+
+    ld hl, TILE_DATA_BLOCK_1_START
+    ld de, VRAM_TILE_BLOCK_1_START
     ld bc, $800
 
 .load_tile_data_block_1  
     ld a, [hl+] ; [tile_data_block_1]
     ld [de], a  ; =>[vram_tile_block_1], a     
     inc de
+
     dec bc
     ld a, b
     or c
     jr nz, .load_tile_data_block_1
-    ld hl, $4b75
-    ld de, $8000
+
+    ld hl, TILE_DATA_BLOCK_0_START
+    ld de, VRAM_TILE_BLOCK_0_START
     ld bc, $800
 
 .load_tile_data_block_0
     ld a, [hl+] ; =>[tile_data_block_0]
     ld [de], a  ; =>[vram_tile_block_0], a     
     inc de
+
     dec bc
     ld a, b
     or c
     jr nz, .load_tile_data_block_0
+
     ret
 
 ; data containes opcodes for a function in HRAM at $FF80
@@ -286,18 +339,21 @@ SECTION "VRAM Text", ROM0[$1A97]
 
 load_special_bonus_text_vram:
     call check_object_dirty_flag
-    ld hl, $1AAF
-    ld de, $C901    ; [de] = w_tile_buffer
-    ld b, $17       ; counter = 23
+
+    ld hl, SPECIAL_BONUS_TEXT_TILE_DATA_START
+    ld de, TILE_BUFFER_START
+    ld b, 23
 
 .copy_next_tile 
-    ld a, [hl+] ; =>special_bonus_text_tile_data
-    ld [de], a  ; w_tile_buffer + $00, a     
+    ld a, [hl+]
+    ld [de], a 
     inc de
     dec b
     jr nz, .copy_next_tile
+
     ld a, $1
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; VRAM address: $9B42            
@@ -319,18 +375,21 @@ pts_text_tile_data:
 
 clear_special_bonus_text_vram:
     call check_object_dirty_flag
-    ld hl, $1ADE
-    ld de, $C901    ; [de] = w_tile_buffer
-    ld b, $17       ; counter = 23
+
+    ld hl, CLEAR_SPECIAL_BONUS_TEXT_TILE_DATA_START
+    ld de, TILE_BUFFER_START
+    ld b, 23
 
 .copy_next_tile
-    ld a, [hl+] ; =>clear_special_bonus_text_tile_data
-    ld [de], a ; w_tile_buffer + $00, a     
+    ld a, [hl+]
+    ld [de], a  
     inc de
     dec b
     jr nz, .copy_next_tile
+
     ld a, $1
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; VRAM address: $9B42            
@@ -351,18 +410,21 @@ clear_pts_text_tile_data:
 
 load_try_again_vram:
     call check_object_dirty_flag
-    ld hl, $1B0D
-    ld de, $C901    ; [de] = w_tile_buffer
-    ld b, $E
+
+    ld hl, TRY_AGAIN_TILE_VRAM_DATA_START
+    ld de, TILE_BUFFER_START    ; [de] = w_tile_buffer
+    ld b, 15
 
 .LAB_1b00
-    ld a, [hl+]     ; =>try_again_tile_vram_data
+    ld a, [hl+]
     ld [de], a      ; w_tile_buffer + $00, a     
     inc de
     dec b
     jr nz, .LAB_1b00
-    ld a, $1
+
+    ld a, 1
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; VRAM address: $99C3            
@@ -376,18 +438,21 @@ try_again_tile_vram_data:
 
 clear_try_again_vram:
     call check_object_dirty_flag
-    ld hl, $1B33
-    ld de, $C901    ; [de] = w_tile_buffer
-    ld b, $E
+
+    ld hl, CLEAR_TRY_AGAIN_TILE_VRAM_DATA_START
+    ld de, TILE_BUFFER_START    ; [de] = w_tile_buffer
+    ld b, 15
 
 .LAB_1b26
-    ld a, [hl+]     ; =>clear_try_again_tile_vram_data -> copy from $C901 to $C90D
+    ld a, [hl+]     ; =>clear_try_again_tile_vram_data -> copy from TILE_BUFFER_START to $C90D
     ld [de], a      ; w_tile_buffer + $00, a     
     inc de
     dec b
     jr nz, .LAB_1b26
-    ld a, $1
+
+    ld a, 1
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
                          
 ; VRAM address: $99C3            
@@ -463,15 +528,16 @@ load_stage_number_oam_buffer:
 
     ld a, [w_stage_number_display]
     call binary_to_bcd
+
     push af
 
-.LAB_46ea
     ld a, b
-    add $80
+    add TILE_BLOCK_1_OFFSET
     ld [OAM_STAGE_NUMBER_START + $1A], a    
 
     pop af
-    add $80
+
+    add TILE_BLOCK_1_OFFSET
     ld [OAM_STAGE_NUMBER_START + $1E], a    
 
     ret
@@ -571,11 +637,12 @@ load_pause_text_oam_buffer:
     ld [OAM_PAUSE_START + $12], a   ; E
     ret
 
-; loads the stage number (not counting bonus levels) to VRAM *
+; loads the stage number (not counting bonus levels) to VRAM
 
 load_stage_number_display_vram:
     call check_object_dirty_flag
-    ld hl, $C901    ; [hl] = w_tile_buffer
+
+    ld hl, TILE_BUFFER_START
 
     ; $9D62
 
@@ -592,20 +659,26 @@ load_stage_number_display_vram:
 
     ld a, [w_stage_number_display]    
     call binary_to_bcd  ; loads the stage number and converts it to BCD
+    
     push af
 
-    ; STAGE NUMBER TEXT
+    ; stage number text
 
     ld a, b
-    add $80
+    add TILE_BLOCK_1_OFFSET
     ld [hl+], a
+
     pop af
-    add $80
+
+    add TILE_BLOCK_1_OFFSET
     ld [hl+], a
+
     xor a
     ld [hl+], a
+
     inc a
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; loads the number of lives that the player currently has to VRAM
@@ -613,39 +686,41 @@ load_stage_number_display_vram:
 load_lives_number_vram:
     call check_object_dirty_flag
 
-.LAB_47ca 
-    ld hl, $C901    ; [hl] = w_tile_buffer
+    ld hl, TILE_BUFFER_START
 
     ; $9E04
 
     ld a, $9E
     ld [hl+], a     ; w_tile_buffer + $00, a    
-    ld a, $4
+    ld a, $04
     ld [hl+], a     ; w_tile_buffer + $01, a  
 
     ; 1 tile
 
-    ld a, $1
+    ld a, 1
     ld [hl+], a     ; w_tile_buffer + $02, a    
 
     ; life number
 
-    ld a, [w_life_counter]       
-    add $80         ; number text offset
+    ld a, [w_life_counter]
+    add TILE_BLOCK_1_OFFSET
     ld [hl+], a     ; w_tile_buffer + $03, a
+
     xor a
     ld [hl+], a     ; w_tile_buffer + $04, a
+
     inc a
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; loads the "TIME" text that appears during bonus stages     *
 
 load_bonus_time_text_vram:
     call check_object_dirty_flag
-    ld hl, $C901    ; [hl] = w_tile_buffer
 
-.LAB_47ea
+    ld hl, TILE_BUFFER_START
+
     ld a, $9D
     ld [hl+], a      ; w_tile_buffer + $00, a    
     ld a, $A1
@@ -653,7 +728,7 @@ load_bonus_time_text_vram:
 
     ; 4 tiles
 
-    ld a, $4
+    ld a, 4
     ld [hl+], a      ; w_tile_buffer + $02, a
 
     ; "TIME"
@@ -667,18 +742,21 @@ load_bonus_time_text_vram:
     ld a, $8E
     ld [hl+], a      ; w_tile_buffer + $06, a    
 
-LAB_47ff:
+end_tile_load:
     xor a
     ld [hl+], a      ; w_tile_buffer + $07, a
+
     inc a
     ldh [h_object_dirty_flag], a 
+
     jp wait_vblank
 
 ; on every level load, clears the "TIME" tiles of the bonus stages
 
 clear_bonus_time_text_vram:
     call check_object_dirty_flag
-    ld hl, $C901    ; [hl] = w_tile_buffer
+
+    ld hl, TILE_BUFFER_START    ; [hl] = w_tile_buffer
 
     ; $9D1A
 
@@ -698,25 +776,24 @@ clear_bonus_time_text_vram:
     ld [hl+], a      ; w_tile_buffer + $03, a    
     ld [hl+], a      ; w_tile_buffer + $04, a    
     ld [hl+], a      ; w_tile_buffer + $05, a    
-    ld [hl+], a      ; w_tile_buffer + $06, a    
-    jr LAB_47ff
+    ld [hl+], a      ; w_tile_buffer + $06, a   
+
+    jr end_tile_load
 
 ; updates score on level load, bonus win and game win
 
 update_score_oam_buffer:
-    ld hl, $C814
-    ldh a, [h_player_score_lo]      
+    ld hl, OAM_SCORE_START
 
+    ldh a, [h_player_score_lo]      
     ld b, a
     ldh a, [h_player_score_hi]    
-
     call score_to_bcd
 
     ld a, $40
-    ld [hl+], a ; <=
-
+    ld [OAM_SCORE_START + 0], a ; y
     ld a, $88
-    ld [hl+], a ; <=
+    ld [OAM_SCORE_START + 1], a ; x
 
     ld b, $FF
     ldh a, [h_score_digit_tens_of_thousands]
@@ -736,62 +813,49 @@ update_score_oam_buffer:
 
 .update_current_score  
     ld a, b
-    ld [hl+], a ; if score < 10000, display FF tile
-
+    ld [OAM_SCORE_START + 2], a ; tile ID: if score < 10000, display FF tile
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 3], a ; attribute
 
     ld a, $38
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 4], a
     ld a, $88
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 5], a
     ldh a, [h_score_digit_thousands]        
-    add $80
-    ld [hl+], a
-
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 6], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 7], a
 
     ld a, $38
-    ld [hl+], a
-    
+    ld [OAM_SCORE_START + 8], a
     ld a, $90
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 9], a
     ldh a, [h_score_digit_hundreds]         
-    add $80
-    ld [hl+], a
-
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 10], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 11], a
 
     ld a, $38
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 12], a
     ld a, $98
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 13], a
     ldh a, [h_score_digit_tens]             
-    add $80
-    ld [hl+], a
-
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 14], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 15], a
 
     ld a, $38
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 16], a
     ld a, $A0
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 17], a
     ldh a, [h_score_digit_ones]             
-    add $80
-    ld [hl+], a
-
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 18], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 19], a
 
     ldh a, [h_top_score_lo]
     ld b, a
@@ -799,10 +863,9 @@ update_score_oam_buffer:
     call score_to_bcd
 
     ld a, $28
-    ld [hl+], a
-
+    ld [OAM_SCORE_START + 20], a
     ld a, $88
-    ld [hl+], a
+    ld [OAM_SCORE_START + 21], a
 
     ld b, $FF
     ldh a, [h_score_digit_tens_of_thousands]
@@ -822,64 +885,67 @@ update_score_oam_buffer:
 
 .update_top_score
     ld a, b
-    ld [hl+], a
+    ld [OAM_SCORE_START + 22], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 23], a
+
     ld a, $20
-    ld [hl+], a
+    ld [OAM_SCORE_START + 24], a
     ld a, $88
-    ld [hl+], a
+    ld [OAM_SCORE_START + 25], a
     ldh a, [h_score_digit_thousands]        
-    add $80
-    ld [hl+], a
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 26], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 27], a
+
     ld a, $20
-    ld [hl+], a
+    ld [OAM_SCORE_START + 28], a
     ld a, $90
-    ld [hl+], a
+    ld [OAM_SCORE_START + 29], a
     ldh a, [h_score_digit_hundreds]         
-    add $80
-    ld [hl+], a
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 30], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 31], a
+
     ld a, $20
-    ld [hl+], a
+    ld [OAM_SCORE_START + 32], a
     ld a, $98
-    ld [hl+], a
+    ld [OAM_SCORE_START + 33], a
     ldh a, [h_score_digit_tens]             
-    add $80
-    ld [hl+], a
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 34], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 35], a
+
     ld a, $20
-    ld [hl+], a
+    ld [OAM_SCORE_START + 36], a
     ld a, $A0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 37], a
     ldh a, [h_score_digit_ones]             
-    add $80
-    ld [hl+], a
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 38], a
     ld a, $0
-    ld [hl+], a
+    ld [OAM_SCORE_START + 39], a
+
     ret
 
 ; called during title screen initialization    
 
-load_title_screen_score_buffer_oam:
+load_title_screen_top_score_buffer_oam:
     ldh a, [h_top_score_lo]
-
     ld b, a
     ldh a, [h_top_score_hi]
-
     call score_to_bcd
 
     ld hl, OAM_TITLE_SCORE_START
 
     ld a, $70
-    ld [hl+], a    ; =>OAM_TITLE_SCORE_START + $00, a 
+    ld [OAM_TITLE_SCORE_START + 0], a    ; =>OAM_TITLE_SCORE_START + $00, a 
 
     ld a, $70
-    ld [hl+], a    ; =>OAM_TITLE_SCORE_START + $01, a  
+    ld [OAM_TITLE_SCORE_START + 1], a    ; =>OAM_TITLE_SCORE_START + $01, a  
 
     ld b, $FF
     ldh a, [h_score_digit_tens_of_thousands]
@@ -896,51 +962,51 @@ load_title_screen_score_buffer_oam:
 
     ld b, $C9
 
-.load_score
+.load_top_score
     ld a, b
-    ld [hl+], a    ; =>BYTE_c82a, a    
+    ld [OAM_TITLE_SCORE_START + 2], a    
     ld a, $0
-    ld [hl+], a    ; =>BYTE_c82b, a    
+    ld [OAM_SCORE_START + 3], a    
 
     ld a, $68
-    ld [hl+], a    ; =>BYTE_c82c, a    
+    ld [OAM_SCORE_START + 4], a    
     ld a, $70
-    ld [hl+], a    ; =>BYTE_c82d, a
+    ld [OAM_SCORE_START + 5], a
     ldh a, [h_score_digit_thousands]        
-    add $80
-    ld [hl+], a    ; =>BYTE_c82e, a    
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 6], a    
     ld a, $0
-    ld [hl+], a    ; =>BYTE_c82f, a    
+    ld [OAM_SCORE_START + 7], a    
 
     ld a, $68
-    ld [hl+], a    ; =>BYTE_c830, a    
+    ld [OAM_SCORE_START + 8], a    
     ld a, $78
-    ld [hl+], a    ; =>BYTE_c831, a    
+    ld [OAM_SCORE_START + 9], a    
     ldh a, [h_score_digit_hundreds]         
-    add $80
-    ld [hl+], a    ; =>BYTE_c832, a    
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 10], a    
     ld a, $0
-    ld [hl+], a    ; =>BYTE_c833, a    
+    ld [OAM_SCORE_START + 11], a    
 
     ld a, $68
-    ld [hl+], a    ; =>BYTE_c834, a    
+    ld [OAM_SCORE_START + 12], a    
     ld a, $80
-    ld [hl+], a    ; =>BYTE_c835, a    
+    ld [OAM_SCORE_START + 13], a    
     ldh a, [h_score_digit_tens]             
-    add $80
-    ld [hl+], a    ; =>BYTE_c836, a    
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 14], a    
     ld a, $0
-    ld [hl+], a    ; =>BYTE_c837, a    
+    ld [OAM_SCORE_START + 15], a    
 
     ld a, $68
-    ld [hl+], a    ; =>BYTE_c838, a    
+    ld [OAM_SCORE_START + 16], a    
     ld a, $88
-    ld [hl+], a    ; =>BYTE_c839, a    
+    ld [OAM_SCORE_START + 17], a    
     ldh a, [h_score_digit_ones]             
-    add $80
-    ld [hl+], a    ; =>BYTE_c83a, a    
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SCORE_START + 18], a    
     ld a, $0
-    ld [hl+], a    ; =>BYTE_c83b, a 
+    ld [OAM_SCORE_START + 19], a 
 
     ret
 
@@ -949,60 +1015,70 @@ load_title_screen_score_buffer_oam:
 
 load_special_bonus_points_oam_buffer:
     ld hl, OAM_SPECIAL_BONUS_POINTS_START
+
     ld a, b
     ld b, c
     call score_to_bcd
+
     ld a, $78
-    ld [hl+], a                     ; Y
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 0], a
     ld a, $30
-    ld [hl+], a                     ; X
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 1], a
     ldh a, [h_score_digit_thousands]        
-    add $80
-    ld [hl+], a                     ; Tile ID: +$80 offset for numbers
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 2], a
     ld a, $0
-    ld [hl+], a                     ; Attribute
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 3], a
+
     ld a, $78
-    ld [hl+], a                     ; Y
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 4], a
     ld a, $38
-    ld [hl+], a                     ; X
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 5], a
     ldh a, [h_score_digit_hundreds]         
-    add $80
-    ld [hl+], a                     ; Tile ID
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 6], a
     ld a, $0
-    ld [hl+], a                      ; Attribute
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 7], a
+
     ld a, $78
-    ld [hl+], a                     ; Y
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 8], a
     ld a, $40
-    ld [hl+], a                     ; X
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 9], a
     ldh a, [h_score_digit_tens]             
-    add $80
-    ld [hl+], a                     ; Tile ID
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 10], a
     ld a, $0
-    ld [hl+], a                      ; Attribute
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 11], a
+
     ld a, $78
-    ld [hl+], a                     ; Y
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 12], a
     ld a, $48
-    ld [hl+], a                     ; X
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 13], a
     ldh a, [h_score_digit_ones]             
-    add $80
-    ld [hl+], a                     ; Tile ID
+    add TILE_BLOCK_1_OFFSET
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 14], a
     ld a, $0
-    ld [hl+], a                      ; Attribute
+    ld [OAM_SPECIAL_BONUS_POINTS_START + 15], a
+
     ret
 
 load_game_over_text_oam_buffer:
-    ; Y plane
+
+    ; y plane
+
     ld a, $50
     ld [OAM_GAME_OVER_START + $00], a
     ld [OAM_GAME_OVER_START + $04], a
     ld [OAM_GAME_OVER_START + $08], a
     ld [OAM_GAME_OVER_START + $0C], a
+
     ld [OAM_GAME_OVER_START + $10], a
     ld [OAM_GAME_OVER_START + $14], a
     ld [OAM_GAME_OVER_START + $18], a
     ld [OAM_GAME_OVER_START + $1C], a
 
-    ; X plane
+    ; x plane
+
     ld a, $38
     ld [OAM_GAME_OVER_START + $01], a
     ld a, $40
@@ -1011,6 +1087,7 @@ load_game_over_text_oam_buffer:
     ld [OAM_GAME_OVER_START + $09], a
     ld a, $50
     ld [OAM_GAME_OVER_START + $0D], a
+
     ld a, $60
     ld [OAM_GAME_OVER_START + $11], a
     ld a, $68
@@ -1020,18 +1097,21 @@ load_game_over_text_oam_buffer:
     ld a, $78
     ld [OAM_GAME_OVER_START + $1D], a
 
-    ; Attr. plane
+    ; attribute
+
     ld a, $0
     ld [OAM_GAME_OVER_START + $03], a
     ld [OAM_GAME_OVER_START + $07], a
     ld [OAM_GAME_OVER_START + $0B], a
     ld [OAM_GAME_OVER_START + $0F], a
+
     ld [OAM_GAME_OVER_START + $13], a
     ld [OAM_GAME_OVER_START + $17], a
     ld [OAM_GAME_OVER_START + $1B], a
     ld [OAM_GAME_OVER_START + $1F], a
 
-    ; Tile ID plane
+    ; tile ID
+
     ld a, $90
     ld [OAM_GAME_OVER_START + $02], a   ; G
     ld a, $8A
@@ -1040,6 +1120,7 @@ load_game_over_text_oam_buffer:
     ld [OAM_GAME_OVER_START + $0A], a   ; M
     ld a, $8E
     ld [OAM_GAME_OVER_START + $0E], a   ; E
+
     ld a, $98
     ld [OAM_GAME_OVER_START + $12], a   ; O
     ld a, $9F
@@ -1048,62 +1129,76 @@ load_game_over_text_oam_buffer:
     ld [OAM_GAME_OVER_START + $1A], a   ; E
     ld a, $9B
     ld [OAM_GAME_OVER_START + $1E], a   ; R
+
     ret
 
 load_wall_oam_buffer:
     ld hl, OAM_WALL_START
-    ld e, $18
-    ld d, $11   ; number of sprites = 17
+    ld e, 24
+    ld d, 17   ; loop counter
 
 .load_next_wall_tile  
     ld a, e
-    ld [hl+], a     ; Y
-    ld a, $8
-    ld [hl+], a     ; X
+    ld [OAM_WALL_START + 0], a     ; Y
+    ld a, 8
+    ld [OAM_WALL_START + 1], a     ; X
     ld a, $B4
-    ld [hl+], a     ; Tile ID
+    ld [OAM_WALL_START + 2], a     ; Tile ID
     ld a, $0
-    ld [hl+], a     ; Attribute   
+    ld [OAM_WALL_START + 3], a     ; Attribute  
+
     ld a, e
-    add $8          ; offset 1 tile (8 px) down
+    add 8          ; offset 1 tile (8 px) down
     ld e, a
+
     dec d
     jr nz, .load_next_wall_tile
+
     ret
 
 SECTION "Copy Tiles and Sprite Pointers Tables", ROM0[$4A66]
 
 copy_tiles4_oam_buffer:
-    sla a   ; A *= 2
+    sla a
     ld e, a
-    ld d, $0
-    ld hl, $4A8B
+    ld d, $0    ; de = a
+
+    ld hl, MARIO_START_SPR_PTR_TABLE_START
     add hl, de
+
     ld d, [hl]   ; =>mario_start_spr_ptr_table
     inc hl
     ld e, [hl]   ; =>mario_start_spr_ptr_table[1]
-    ld hl, $C888
-    ld a, $4
+
+    ld hl, OAM_MARIO_WALK_START
+    ld a, 4    ; loop counter
 
 .load_tiles4  
-    push af     ; $C888-$C897
-    ld a, [DE]  ; Y-loc
-    add c       ; y offset
-    ld [hl+], a    ; =>BYTE_c888, a    
+    push af
+
+    ld a, [DE]
+    add c
+    ld [hl+], a
     inc de
-    ld a, [DE]  ; X-loc
-    add b       ; x offset
-    ld [hl+], a    ; =>BYTE_c889, a    
+
+    ld a, [DE]
+    add b
+    ld [hl+], a
     inc de
+
     ld a, [DE]  ; Tile No
-    ld [hl+], a    ; =>BYTE_c88a, a    
+    ld [hl+], a
     inc de
+
     ld a, [DE]  ; Attribute
-    ld [hl+], a    ; =>BYTE_c88b, a    
+    ld [hl+], a
     inc de
+
     pop af
+
     dec a
     jr nz, .load_tiles4
+
     ret
 
 mario_start_spr_ptr_table:
@@ -1120,20 +1215,6 @@ mario_wink_spr_ptr_table:
 
 SECTION "Tile Data Block 0", ROM0[$4B75]
 
-; [0] mario_walk_frame_0         
-; [1] mario_walk_frame_1         
-; [2] mario_walk_frame_2         
-; [3] mario_still                
-; [4] mario_jump_in              
-; [5] mario_jump_out_left        
-; [6] mario_jump_out_right       
-; [7] explosion_frame_0          
-; [8] explosion_frame_1          
-; [9] explosion_frame_2          
-; [10] mario_wink_frame_0        
-; [11] mario_wink_frame_1        
-; [12] mario_wink_frame_2
-
 tile_data_block_0:
     db $68,$7F,$A8,$A8,$FF,$E8,$E8,$FF,$7F,$7F,$00,$00,$00,$00,$00,$00,$00,$FF,$00,$00,$FF,$00,$00,$FF,$FF,$FF,$00,$00,$00,$00,$00,$00,$6F,$7F,$AF,$AF,$F8,$E8,$E8,$FF,$7F,$7F,$00,$00,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$00,$00,$00,$FF,$FF,$FF,$00,$00,$00,$00,$00,$00,$3C,$FF,$3C,$3C,$81,$00,$00,$FF,$FF,$FF,$00,$00,$00,$00,$00,$00,$60,$60,$B0,$B0,$F0,$F0,$60,$60,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$04,$07,$10,$1F,$06,$02,$1F,$01,$0F,$0F,$07,$00,$01,$03,$00,$00,$00,$E0,$00
 
@@ -1146,4 +1227,3 @@ SECTION "Tile Data Block 2", ROM0[$5B75]
 
 tile_data_block_2:
     db $7F,$7F,$40,$40,$60,$40,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$E0,$E0,$18,$18,$04,$04,$E2,$E2,$F6,$F2,$FF,$F9,$FF,$F9,$FF,$F9,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$5F,$7F,$5F,$7F,$4F,$3F,$2F,$3F,$27,$1F,$10,$0F,$0C,$03,$03,$FF,$FD,$FF,$FD,$FF,$F9,$FE,$FA,$FE,$F2,$FC,$04,$F8,$18,$E0,$E0,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$FD,$FF,$FD,$FF,$FD,$FF,$FD,$FF,$FD,$FF,$FD,$FF,$FD,$FF,$FD,$7F,$7F,$41,$41,$63,$41,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7E,$5C,$7C,$5C,$7F,$5F,$7F,$5F,$7F,$5F,$7F,$5F,$7F,$5F,$FF,$FF,$01,$01,$03,$01,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$7F,$5F,$7F,$5F,$7F,$5F,$7F,$5F,$7F,$5F,$7F,$40,$7F,$40,$7F,$7F,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$01,$FF,$01,$FF,$FF,$03,$03,$0C,$0C,$10,$10,$23,$23,$37,$27,$7F,$4F,$7F,$4F,$7F,$4F,$3F,$27,$3F,$27,$3F,$27,$3F,$27,$3F,$27,$3F,$21,$3F,$21,$3F,$3F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$40,$7F,$40,$7F,$7F,$7E,$72,$7E,$72,$7E,$72,$7E,$72,$7E,$72,$7E,$42,$7E,$42,$7E,$7E,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$5D,$7F,$41,$7F,$41,$7F,$7F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$4F,$7F,$41,$7F,$41,$7F,$7F,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$79,$7F,$41,$7F,$41,$7F,$7F,$FF,$FF,$03,$01,$07,$01,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$01,$FF,$FF,$00,$00,$00,$00,$FF,$FF,$03,$01,$07,$01,$FF,$F9,$FF,$F9,$FF,$F9,$FF,$01,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$C6,$C6,$E6,$E6,$E6,$E6,$D6,$D6,$CE,$CE,$CE,$CE,$C6,$C6,$00,$00,$C0,$C0,$C0,$C0,$1B,$1B,$DD,$DD,$D9,$D9,$D9,$D9,$D9,$D9,$00,$00,$30,$30,$78,$78,$33,$33,$B6,$B6,$B7,$B7,$B6,$B6,$B3,$B3,$00,$00,$00,$00,$00,$00,$CD,$CD,$6E,$6E,$EC,$EC,$0C,$0C,$EC,$EC,$00,$00,$01,$01,$01,$01,$8F,$8F,$D9,$D9,$D9,$D9,$D9,$D9,$CF,$CF,$00,$00,$80,$80,$80,$80,$9E,$9E,$B3,$B3,$B3,$B3,$B3,$B3,$9E,$9E,$00,$00,$38,$38,$44,$44,$BA,$BA,$A2,$A2,$BA,$BA,$44,$44,$38,$38,$00,$00,$18,$18,$18,$18,$18,$18,$10,$10,$10,$10,$00,$00,$30,$30,$00,$00,$00,$00,$3C,$3C,$FF,$FF,$C3,$FF,$80,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$00,$00,$00,$03,$03,$C3,$C3,$E6,$E7,$36,$F7,$1C,$FF,$0C,$FF,$3C,$3C,$FF,$FF,$C3,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$01,$FF,$00,$00,$80,$80,$C0,$C0,$C0,$C0,$60,$E0,$7F,$FF,$FF,$FF,$80,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$C0,$C0,$F0,$F0,$06,$07,$06,$07,$07,$07,$03,$03,$03,$03,$01,$01,$00,$00,$00,$00,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$82,$FF,$E7,$FF,$7F,$7F,$06,$FF,$03,$FF,$01,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$C0,$FF,$03,$FF,$02,$FF,$06,$FF,$04,$FF,$00,$FF,$00,$FF,$03,$FF,$3F,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$80,$FF,$C0,$FF,$C0,$FF,$38,$F8,$1C,$FC,$0C,$FC,$06,$FE,$06,$FE,$03,$FF,$03,$FF,$03,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$E0,$E0,$F0,$F0,$B8,$F8,$18,$F8,$00,$00,$00,$00,$00,$00,$00,$00,$03,$03,$0F,$0F,$1F,$1C,$3F,$30,$1F,$1F,$3F,$3F,$1E,$1E,$0C,$0C,$EC,$EC,$FC,$FC,$FE,$1E,$FF,$07,$F9,$FF,$FF,$FF,$3E,$3E,$78,$78,$F8,$F8,$70,$70,$D0,$D0,$D0,$D0,$FF,$FF,$FF,$FF,$3F,$3F,$0F,$0F,$37,$37,$7F,$7F,$7F,$7F,$37,$36,$C0,$FF,$E0,$FF,$FC,$FF,$FF,$F7,$FF,$F1,$FF,$C3,$FF,$03,$FF,$01,$01,$FF,$00,$FF,$00,$FF,$81,$FF,$F1,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$18,$F8,$18,$F8,$B0,$F0,$F0,$F0,$E0,$E0,$80,$80,$C0,$C0,$C0,$C0,$7F,$60,$7F,$60,$FF,$C0,$FF,$C0,$FF,$C0,$FF,$C0,$7F,$60,$7F,$60,$F0,$F0,$F0,$30,$F8,$18,$FC,$0C,$FE,$06,$FF,$01,$FF,$00,$FF,$00,$E3,$E2,$F7,$F6,$FF,$FE,$FF,$FC,$3F,$3C,$FF,$F0,$FF,$00,$FF,$00,$FF,$FF,$FF,$FF,$FF,$7F,$FF,$3F,$FF,$1F,$FF,$1E,$FF,$3E,$FF,$3E,$F0,$F0,$FC,$FC,$FE,$8E,$FE,$02,$FF,$03,$FF,$03,$FF,$03,$FF,$03,$3F,$30,$1F,$1C,$0F,$0E,$1F,$1F,$1F,$1F,$1F,$1F,$0F,$0F,$01,$01,$FF,$00,$FF,$00,$FF,$00,$FF,$E0,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$03,$FF,$07,$FF,$0F,$FF,$FF,$FF,$FF,$FF,$FF,$FD,$FD,$FC,$FC,$FF,$80,$FF,$E0,$FF,$F0,$FF,$F7,$FC,$FC,$E0,$E0,$80,$80,$10,$10,$FF,$1E,$F3,$73,$C0,$C0,$80,$80,$04,$04,$04,$04,$9F,$9F,$84,$84,$FF,$1E,$FF,$8C,$FF,$E4,$3F,$20,$3F,$30,$1F,$13,$1F,$13,$3F,$33,$FF,$03,$FE,$06,$FE,$06,$FE,$0E,$FC,$7C,$F0,$F0,$00,$00,$00,$00,$FC,$FC,$70,$70,$38,$38,$1E,$1E,$07,$07,$03,$03,$00,$00,$00,$00,$F8,$F8,$02,$02,$07,$07,$02,$02,$80,$80,$F0,$F0,$FF,$FF,$3F,$3F,$13,$13,$38,$38,$10,$10,$10,$10,$00,$00,$00,$00,$FF,$FF,$FF,$FF,$E4,$E4,$80,$80,$80,$80,$00,$00,$03,$03,$1F,$1F,$FE,$FE,$F0,$F0,$3E,$26,$7E,$6E,$7C,$5C,$F8,$F8,$E0,$E0,$80,$80,$00,$00,$00,$00,$00,$00,$00,$40,$39,$40,$3D,$41,$0E,$70,$06,$38,$10,$1E,$03,$03,$00,$02,$9C,$82,$3C,$82,$70,$0E,$60,$1C,$08,$78,$C0,$C0,$00,$00,$00,$02,$9C,$82,$3C,$82,$71,$0F,$63,$1F,$0B,$7B,$C7,$C7,$06,$07,$00,$00,$03,$03,$0E,$0E,$18,$18,$30,$30,$60,$60,$C0,$C0,$80,$80,$F8,$F8,$9C,$94,$3F,$27,$7C,$5C,$F0,$B0,$E0,$E6,$80,$87,$C0,$C7,$0F,$0F,$F8,$F8,$80,$86,$00,$06,$00,$30,$00,$36,$00,$36,$00,$B6,$F0,$F0,$00,$01,$00,$03,$00,$D9,$00,$ED,$00,$CD,$00,$CD,$00,$CD,$00,$00,$00,$80,$00,$C0,$00,$9E,$00,$B3,$00,$BF,$00,$B0,$00,$9F,$0F,$0F,$00,$00,$00,$00,$00,$60,$00,$7C,$00,$66,$00,$66,$00,$66,$F0,$F0,$1F,$1F,$01,$01,$00,$0C,$00,$0C,$00,$7C,$00,$CC,$00,$CC,$1F,$1F,$39,$29,$FC,$E4,$3E,$3A,$0F,$0D,$07,$07,$01,$01,$03,$E3,$00,$00,$C0,$C0,$70,$70,$18,$18,$0C,$0C,$06,$06,$03,$03,$01,$01,$C0,$C0,$60,$60,$30,$30,$18,$18,$0C,$0C,$06,$06,$03,$03,$01,$01,$40,$46,$60,$66,$20,$26,$30,$36,$70,$70,$D8,$D8,$8D,$8D,$07,$07,$00,$F6,$00,$76,$00,$30,$01,$01,$0F,$0F,$78,$78,$C0,$C0,$00,$00,$00,$C0,$00,$00,$0F,$0F,$F8,$F8,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$06,$00,$00,$F0,$F0,$1F,$1F,$00,$00,$00,$00,$00,$00,$00,$00,$00,$CD,$00,$7D,$00,$01,$80,$80,$F0,$F0,$1E,$1E,$03,$03,$00,$00,$02,$B2,$06,$B6,$04,$B4,$0C,$EC,$0E,$0E,$1B,$1B,$B1,$B1,$E0,$E0,$03,$03,$06,$06,$0C,$0C,$18,$18,$30,$30,$60,$60,$C0,$C0,$80,$80
-

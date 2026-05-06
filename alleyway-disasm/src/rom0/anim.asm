@@ -3,16 +3,6 @@ DEF PADDLE_OPEN_FRAME_0_TILE_DATA_START     EQU $4554
 DEF EXPLOSION_ANIM_OFFSET_DATA_START        EQU $4599
 DEF MARIO_WINK_ANIM_OFFSET_DATA_START       EQU $45E6
 
-SECTION "Clear Animation OAM Buffer", ROM0[$0378]
-
-; clears the OAM buffer of the explosion
-
-clear_anim_oam_buffer:
-    ld b, $18
-    ld a, $0
-    ld hl, $C888
-    jr Lab_0373
-
 SECTION "Bricks Animation", ROM0[$0997]
 
 ; Runs brick_collision_handler + wait_vblank 10 times, decrementing h_play_area_scroll_y
