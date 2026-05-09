@@ -1,6 +1,6 @@
-# Alleyway (Game Boy) Disassembly
+# Alleyway (Game Boy) Disassembly + Decompilation (WIP)
 
-Annotated disassembly of **Alleyway** (Nintendo, 1989) for the Game Boy.
+Annotated disassembly and decompilation of **Alleyway** (Nintendo, 1989) for the Game Boy.
 
 ## Tools
 - **[Ghidra 11.4.2](https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_11.4.2_build)** with the **[GhidraBoy](https://github.com/Gekkio/GhidraBoy)** extension.
@@ -28,8 +28,7 @@ reasons.
 ## Coverage
 ~200 functions identified and named, including 12 that are either
 unreachable, debug or unused.
-Some data remains unnamed, and there is much work to do in the labelling/
-commenting part of the job.
+Some data remains unnamed.
 
 ## Notable Findings
 
@@ -55,6 +54,9 @@ When the player dies with a small paddle while hugging the right wall,
 the paddle resets to normal width without re-clamping its position,
 causing it to clip inside the wall. Resolves on next movement input.
 This bug is fixed in the [Alleyway DX](https://www.romhacking.net/hacks/6510/) ROM hack.
+
+## To-do
+- Matching C to RGDDS ASM -> 0 % match: currently implementing a workflow.
 
 ## License
 This project contains no Nintendo IP. The .asm files present here are 
