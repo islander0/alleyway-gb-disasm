@@ -56,7 +56,9 @@ causing it to clip inside the wall. Resolves on next movement input.
 This bug is fixed in the [Alleyway DX](https://www.romhacking.net/hacks/6510/) ROM hack.
 
 ## To-do
-- Matching C to RGDDS ASM -> 0 % match: currently implementing a workflow.
+Some additional refinement of the disassembly could be used.
+The decompilation is only there as a personal exercise, there's no real use case
+for it at this time.
 
 ## License
 This project contains no Nintendo IP. The .asm files present here are 
